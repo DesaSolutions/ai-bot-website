@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat Widget Test</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    #chat-box { width: 300px; height: 400px; border: 1px solid #ccc; padding: 10px; overflow-y: auto; }
+    #input { width: 300px; padding: 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<h2>Chat Widget Test</h2>
+
+<div id="chat-box"></div>
+
+<input id="input" placeholder="Type a message..." />
+
+<script>
+  const input = document.getElementById("input");
+  const chatBox = document.getElementById("chat-box");
+
+  input.addEventListener("keydown", async (e) => {
+    if (e.key === "Enter") {
+      const msg = input.value;
+      input.value = "";
+
+      chatBox.innerHTML += `<div><b>You:</b> ${msg}</div>`;
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg }),
+      });
+
+      const data = await res.json();
+      chatBox.innerHTML += `<div><b>Bot:</b> ${data.reply}</div>`;
+    }
+  });
+</script>
+
+</body>
+</html>

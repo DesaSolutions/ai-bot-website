@@ -1,12 +1,24 @@
-const express = require('express');
+import express from "express";
+import { generateReply } from "../services/openaiService.js";
+
 const router = express.Router();
 
-router.post('/chat', async (req, res) => {
-    const userMessage = req.body.message || "No message received";
+router.post("/", async (req, res) => {
+  try {
+    const { message, product } = req.body;
 
-    return res.json({
-        reply: "Your backend is working! You said: " + userMessage
-    });
+    if (!message) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    const reply = await generateReply(message, product || "default");
+
+    res.json({ reply });
+
+  } catch (err) {
+    console.error("Chat error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
-module.exports = router;
+export default router;

@@ -1,25 +1,43 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-require('dotenv').config();
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import OpenAI from "openai";
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ROUTES
-const chatRoutes = require('./routes/chat');
-app.use('/api', chatRoutes);
+// 🟢 IMPORTANT — serve public folder
+app.use(express.static("public"));
 
-// FRONTEND HANDLING (if we add frontend later)
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.get('/', (req, res) => {
-    res.send("Your AI-bot backend is running!");
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-// PORT
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are a helpful assistant." },
+        { role: "user", content: message },
+      ],
+    });
+
+    const reply = completion.choices[0].message.content;
+    res.json({ reply });
+  } catch (error) {
+    console.error("Chat API Error:", error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+// Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
