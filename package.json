@@ -9,6 +9,11 @@
 "scripts": {
   "start": "node server.js"
 },
+"dependencies": {
+  "express": "...",
+  "cors": "...",
+  "dotenv": "..."
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
