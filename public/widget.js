@@ -29,7 +29,7 @@
   // --------------------
   // CREATE CHAT WINDOW
   // --------------------
-  const frame = document.createElement("iframe");
+  const iframe = document.createElement("iframe");
   frame.id = "desa-chat-window";
   frame.src = "https://desa-ai-bot-website.azurewebsites.net/widget.html";
   frame.style.cssText = `
