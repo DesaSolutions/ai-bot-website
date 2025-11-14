@@ -1,7 +1,19 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import OpenAI from "openai";
+import { askOpenAI } from "./services/openaiService.js";  // <-- MUST BE HERE
+
+function isUnsafeMessage(text) {
+  const bannedWords = [
+    "sex", "nude", "fuck", "porn", "suicide", "kill", 
+    "bomb", "terrorist", "rape", "asshole", "bitch",
+    "communal", "hate", "genocide", "drug making"
+  ];
+
+  text = text.toLowerCase();
+
+  return bannedWords.some(word => text.includes(word));
+}
 
 dotenv.config();
 
@@ -9,35 +21,37 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🟢 IMPORTANT — serve public folder
+// Serve widget + CSS
 app.use(express.static("public"));
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
+// 🚀 NEW DESA AI chat route
 app.post("/api/chat", async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, site } = req.body;
 
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are a helpful assistant." },
-        { role: "user", content: message },
-      ],
-    });
+    if (!message) {
+  return res.status(400).json({ error: "Message is required" });
+    }
+    
+    // 🚨 Safety Check
+    if (isUnsafeMessage(message)) {
+      return res.json({
+        reply: "⚠️ I’m here to keep this space respectful and safe. Please avoid inappropriate or harmful questions."
+      });
+    }
 
-    const reply = completion.choices[0].message.content;
+
+    // 🔥 Use DESA AI service
+    const reply = await askOpenAI(message, site || "desasolutionsindia.com");
+
     res.json({ reply });
-  } catch (error) {
-    console.error("Chat API Error:", error);
-    res.status(500).json({ error: "Something went wrong" });
+
+  } catch (err) {
+    console.error("API ERROR:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-// Start Server
+// Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
