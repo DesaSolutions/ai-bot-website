@@ -1,7 +1,20 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { askOpenAI } from "./services/openaiService.js";  // <-- MUST BE HERE
+import { askOpenAI } from "./services/openaiService.js";  
+import fs from "fs";
+import path from "path";
+
+function logChat(message, reply, site) {
+  const logPath = path.join("logs", "chats", `${new Date().toISOString().slice(0,10)}.log`);
+
+  const line = `[${new Date().toISOString()}] (${site}) USER: ${message}\nBOT: ${reply}\n\n`;
+
+  fs.appendFile(logPath, line, err => {
+    if (err) console.error("Logging error:", err);
+  });
+}
+
 
 function isUnsafeMessage(text) {
   const bannedWords = [
@@ -14,6 +27,39 @@ function isUnsafeMessage(text) {
 
   return bannedWords.some(word => text.includes(word));
 }
+
+
+function isLead(message) {
+  const triggers = [
+    "price", "pricing", "contact", "hire", 
+    "interested", "need help", "need a website",
+    "want a website", "want chatbot", "build me",
+    "quotation", "quote", "how much", "cost"
+  ];
+
+  const text = message.toLowerCase();
+  return triggers.some(t => text.includes(t));
+}
+
+function logLead(message, site) {
+  const leadPath = path.join("logs", "leads.log");
+
+  const entry =
+    `\n--- LEAD ---\n` +
+    `Date: ${new Date().toISOString()}\n` +
+    `Website: ${site}\n` +
+    `Message: ${message}\n` +
+    `----------------------\n`;
+
+  fs.appendFile(leadPath, entry, err => {
+    if (err) console.error("Lead logging failed:", err);
+  });
+}
+
+if (isLead(message)) {
+  logLead(message, site);
+}
+
 
 dotenv.config();
 
@@ -43,6 +89,9 @@ app.post("/api/chat", async (req, res) => {
 
     // 🔥 Use DESA AI service
     const reply = await askOpenAI(message, site || "desasolutionsindia.com");
+
+    // 📌 Save the chat record
+    logChat(message, reply, site);
 
     res.json({ reply });
 
