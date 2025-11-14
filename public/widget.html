@@ -1,43 +1,133 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Chat Widget Test</title>
+  <meta charset="UTF-8">
+  <title>DESA Chat</title>
   <style>
-    body { font-family: Arial; padding: 20px; }
-    #chat-box { width: 300px; height: 400px; border: 1px solid #ccc; padding: 10px; overflow-y: auto; }
-    #input { width: 300px; padding: 10px; margin-top: 10px; }
+    body {
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fff7f1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #header {
+      background: linear-gradient(135deg, #ff914d, #ffb875);
+      padding: 14px;
+      color: white;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    #messages {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+    }
+
+    .msg {
+      max-width: 80%;
+      padding: 10px 14px;
+      margin: 8px 0;
+      border-radius: 12px;
+      line-height: 1.4;
+    }
+
+    .user {
+      background: #ffe0c4;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+
+    .bot {
+      background: #fef6ee;
+      border: 1px solid #ffb875;
+      margin-right: auto;
+    }
+
+    #inputBox {
+      display: flex;
+      border-top: 1px solid #ddd;
+    }
+
+    #input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+    }
+
+    #send {
+      padding: 12px 18px;
+      background: #ff914d;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    #typing {
+      font-size: 12px;
+      color: #888;
+      padding-left: 4px;
+    }
   </style>
 </head>
+
 <body>
 
-<h2>Chat Widget Test</h2>
+  <div id="header">DESA AI Assistant</div>
 
-<div id="chat-box"></div>
+  <div id="messages"></div>
+  <div id="typing"></div>
 
-<input id="input" placeholder="Type a message..." />
+  <div id="inputBox">
+    <input id="input" placeholder="Ask me anything..." />
+    <button id="send">Send</button>
+  </div>
 
-<script>
-  const input = document.getElementById("input");
-  const chatBox = document.getElementById("chat-box");
+  <script>
+    const messagesDiv = document.getElementById("messages");
+    const typingDiv = document.getElementById("typing");
 
-  input.addEventListener("keydown", async (e) => {
-    if (e.key === "Enter") {
-      const msg = input.value;
-      input.value = "";
+    function addMessage(text, cls) {
+      const msg = document.createElement("div");
+      msg.className = "msg " + cls;
+      msg.innerText = text;
+      messagesDiv.appendChild(msg);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
 
-      chatBox.innerHTML += `<div><b>You:</b> ${msg}</div>`;
+    async function sendMessage() {
+      const text = document.getElementById("input").value;
+      if (!text) return;
 
-      const res = await fetch("/api/chat", {
+      addMessage(text, "user");
+      document.getElementById("input").value = "";
+
+      typingDiv.innerText = "DESA is typing...";
+
+      const res = await fetch("https://desa-ai-bot-website.azurewebsites.net/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg }),
+        body: JSON.stringify({ message: text, project: "desasolutions" })
       });
 
       const data = await res.json();
-      chatBox.innerHTML += `<div><b>Bot:</b> ${data.reply}</div>`;
+      typingDiv.innerText = "";
+
+      addMessage(data.reply, "bot");
     }
-  });
-</script>
+
+    document.getElementById("send").onclick = sendMessage;
+    document.getElementById("input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
 
 </body>
 </html>

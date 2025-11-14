@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Chat</title>
+  <style>
+    body { font-family: Arial; margin: 0; padding: 0; }
+    #messages { height: 430px; overflow-y: auto; padding: 10px; }
+    #inputBox { display: flex; border-top: 1px solid #ccc; }
+    #input { flex: 1; padding: 10px; border: none; }
+    #send { padding: 10px; background: #ff914d; border: none; color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="messages"></div>
+  <div id="inputBox">
+    <input id="input" placeholder="Type a message..." />
+    <button id="send">Send</button>
+  </div>
+
+  <script>
+    const messagesDiv = document.getElementById("messages");
+
+    document.getElementById("send").onclick = async () => {
+      const text = document.getElementById("input").value;
+
+      // Show user message
+      messagesDiv.innerHTML += `<p><b>You:</b> ${text}</p>`;
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text })
+      });
+
+      const data = await res.json();
+
+      messagesDiv.innerHTML += `<p><b>Bot:</b> ${data.reply}</p>`;
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      document.getElementById("input").value = "";
+    };
+  </script>
+</body>
+</html>
